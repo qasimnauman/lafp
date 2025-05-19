@@ -3,18 +3,23 @@ import swaggerAutogen from 'swagger-autogen';
 const doc = {
   info: {
     title: 'My API',
-    description: 'Description'
+    description: 'Description',
   },
-  host: `localhost:${process.env.PORT || 5000}`,
-  basePath: '/api/v1'
+  host: `localhost:${process.env.PORT || 5000}`, // Just host:port, no protocol
+  basePath: '/api/v1',
+  schemes: ['http'], // optional: ['http', 'https']
 };
 
 const outputFile = './swagger-output.json';
-const routes = ['./routes/*.js'];
+const endpointsFiles = ['./routes/user.routes.js']; // or ['./routes/*.js']
 
-/* NOTE: If you are using the express Router, you must pass in the 'routes' only the 
-root file where the route starts, such as index.js, app.js, routes.js, etc ... */
+const generateSwagger = async () => {
+  try {
+    await swaggerAutogen()(outputFile, endpointsFiles, doc);
+    console.log('Swagger file generated successfully!');
+  } catch (error) {
+    console.error('Error generating swagger:', error);
+  }
+};
 
-swaggerAutogen()(outputFile, routes, doc);
-
-export { doc, outputFile, routes };
+generateSwagger();
