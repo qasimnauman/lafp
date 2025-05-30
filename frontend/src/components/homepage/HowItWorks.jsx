@@ -1,73 +1,78 @@
 import React from "react";
-import { FaSearch, FaBell, FaShieldAlt, FaFileAlt } from "react-icons/fa";
-import StepCard from "../common/StepCard"; // Adjust the path as needed
+import {
+  FaSearch,
+  FaBell,
+  FaShieldAlt,
+  FaFileAlt,
+  FaArrowAltCircleRight,
+} from "react-icons/fa";
+import { FaArrowRight } from "react-icons/fa6";
 
 const steps = [
   {
-    icon: <FaFileAlt className="w-8 h-8" />,
-    title: "Step 1",
-    subtitle: "Report",
+    icon: <FaFileAlt className="w-6 h-6 text-white" />,
+    title: "Report",
     description:
-      "Submit details of lost items or report items you've found on campus, with photos and description.",
+      "Submit details of lost or found items on campus, including photos and descriptions.",
   },
   {
-    icon: <FaSearch className="w-8 h-8" />,
-    title: "Step 2",
-    subtitle: "Search",
+    icon: <FaSearch className="w-6 h-6 text-white" />,
+    title: "Search",
     description:
-      "Browse through listings of lost and found items categorized by locations like A-Block, B-Block, or Cafeteria.",
+      "Explore categorized listings by areas like A-Block, B-Block, or Cafeteria.",
   },
   {
-    icon: <FaBell className="w-8 h-8" />,
-    title: "Step 3",
-    subtitle: "Get Notified",
+    icon: <FaBell className="w-6 h-6 text-white" />,
+    title: "Get Notified",
     description:
-      "Receive instant alerts when a matching item is found or when someone claims your found item.",
+      "Get instant alerts when your lost item is found or your report matches something.",
   },
   {
-    icon: <FaShieldAlt className="w-8 h-8" />,
-    title: "Step 4",
-    subtitle: "Claim Securely",
+    icon: <FaShieldAlt className="w-6 h-6 text-white" />,
+    title: "Claim Securely",
     description:
-      "Verify ownership through our secure system and arrange pickup from the relevant office.",
+      "Verify ownership through our system and arrange secure pickup from admin office.",
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <section className="py-16 px-6 bg-gray-50 text-center">
-      <h2 className="text-3xl font-bold mb-2 text-blue-800">
-        How <span className="text-blue-600">AULAF</span> Works
+    <div className="w-[90%] mx-auto bg-gradient-to-b from-gray-50 to-white py-16 px-4 sm:px-8 text-center">
+      <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4">
+        How <span className="text-blue-600">It Works</span>
       </h2>
-      <p className="text-blue-500 max-w-2xl mx-auto mb-12">
-        Our platform makes it easy for Air University Islamabad students to report, find, and
-        claim lost items without the hassle of visiting multiple offices.
+      <p className="text-gray-600 max-w-xl mx-auto mb-12 text-lg">
+        A seamless lost and found experience tailored for Air University
+        students.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {steps.map((step, index) => (
-          <StepCard
-            key={index}
-            icon={step.icon}
-            title={step.title}
-            subtitle={step.subtitle}
-            description={step.description}
-            width="w-full"
-          />
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-8 sm:gap-4 mx-auto">
+        {steps.map((step, idx) => (
+          <div
+            key={idx}
+            className="bg-white shadow-md rounded-3xl px-6 py-8 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+          >
+            <div className="w-14 h-14 mx-auto mb-4 bg-blue-600 rounded-full flex items-center justify-center shadow-lg">
+              {step.icon}
+            </div>
+            <h3 className="text-lg font-bold text-gray-800 mb-2">
+              {step.title}
+            </h3>
+            <p className="text-gray-500 text-sm leading-relaxed">
+              {step.description}
+            </p>
+          </div>
         ))}
       </div>
 
-      <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4 text-sm text-blue-500">
-        <span className="flex items-center gap-1">
-          <span className="text-green-500">✔</span> Secure & Reliable
+      <div className="mt-12 flex flex-col items-center gap-4">
+        <span className="text-gray-600 text-sm font-medium mr-2">
+          Ready to find your lost items?
         </span>
-        <span className="flex items-center gap-1">
-          <span className="text-green-500">✔</span> Fast Recovery
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="text-green-500">✔</span> Privacy Protected
-        </span>
+        <button className="px-6 py-3 flex gap-4 items-center justify-center text-white bg-[#004080] rounded-md font-medium hover:bg-[#002e5f] transition-colors duration-300">
+          Get Started <FaArrowRight className="inline-block" />
+        </button>
       </div>
-    </section>
+    </div>
   );
 }

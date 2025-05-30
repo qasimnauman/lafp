@@ -1,5 +1,5 @@
-import React from 'react';
-import { Link } from 'react-router-dom'; // import Link
+import React from "react";
+import { Link } from "react-router-dom"; // import Link
 
 const CTASection = () => {
   return (
@@ -9,7 +9,9 @@ const CTASection = () => {
           Ready to find what you've lost at AU?
         </h2>
         <p className="mt-4 text-gray-700 text-lg">
-          Join your fellow Air University Students who have successfully recovered their belongings through our platform. It's quick, easy, and completely free.
+          Join your fellow Air University Students who have successfully
+          recovered their belongings through our platform. It's quick, easy, and
+          completely free.
         </p>
         <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
           <Link
