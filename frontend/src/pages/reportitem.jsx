@@ -42,7 +42,7 @@ const ReportItemPage = () => {
   const isLost = activeTab === "lost";
 
   return (
-    <div className="min-h-screen py-12 px-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen py-12 px-4 ">
       <div className="max-w-3xl mx-auto bg-white p-8 shadow-2xl rounded-2xl border border-gray-200">
         {/* Header */}
         <div className="text-center mb-6">
