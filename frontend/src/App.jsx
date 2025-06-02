@@ -6,10 +6,9 @@ import AdminLayout from './components/Admin/Layout';
 import Navbar from './components/common/Navbar';
 import Footer from './components/common/Footer';
 
-
 // Public Pages
 import Homepage from './pages/homepage';
-import ReportItem from './pages/ReportItem';
+import ReportItem from './pages/Reportitem';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AccountSettings from './pages/profile';
