@@ -8,7 +8,7 @@ import Footer from './components/common/Footer';
 
 // Public Pages
 import Homepage from './pages/homepage';
-import ReportItem from './pages/Reportitem';
+import ReportItemPage from './pages/Reportitem';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AccountSettings from './pages/profile';
@@ -43,7 +43,7 @@ const App = () => {
           element={
             <>
               <Navbar />
-              <ReportItem />
+              <ReportItemPage />
               <Footer />
             </>
           }
