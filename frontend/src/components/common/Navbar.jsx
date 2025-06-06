@@ -1,59 +1,85 @@
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import aulogo from "../../assets/aulogo.png";
 
 const Navbar = () => {
-  // const [menuOpen, setMenuOpen] = useState(false);
-  // const toggleMenu = () => setMenuOpen(!menuOpen);
-  const location = useLocation();
+  // const location = useLocation();
+
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [activeId, setActiveId] = useState("");
+
+  const handleScroll = useCallback(() => {
+    const currentY = window.scrollY;
+
+    // Show/hide navbar on scroll direction
+    setIsVisible(currentY <= 50 || currentY < lastScrollY);
+    setLastScrollY(currentY);
+
+    // Set active section
+    const sections = document.querySelectorAll("div[id]");
+    let current = "";
+    sections.forEach((section) => {
+      const top = section.offsetTop - 150; // offset for navbar height
+      if (currentY >= top) {
+        current = section.getAttribute("id");
+      }
+    });
+    setActiveId(current);
+  }, [lastScrollY]);
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [handleScroll]);
 
   const navItems = [
-    { name: "Home", path: "/" },
-    { name: "How it Works", path: "/items/Lost" },
-    { name: "Lost Items", path: "/items/Found" },
-    { name: "Contact Us", path: "/reportitem" },
+    { name: "Home", path: "home" },
+    { name: "How it Works", path: "whyus" },
+    { name: "Lost Items", path: "experiences" },
+    { name: "Contact Us", path: "getstarted" },
   ];
 
-  const isActive = (path) => {
-    if (path === "/") return location.pathname === "/";
-    return location.pathname.startsWith(path);
-  };
-
   return (
-    <nav className="w-[90%] mx-auto bg-gray-200 shadow-md rounded-full px-6 py-4 mt-3 mb-6">
-      <div className="mx-auto flex items-center justify-between">
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      } bg-gray-200 shadow-md px-6 py-4 rounded-2xl w-[90%] mx-auto mt-3`}
+    >
+      <div className="flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2">
           <img src={aulogo} alt="AU Logo" className="w-10 h-auto" />
         </Link>
 
-        {/* Centered Nav Links */}
+        {/* Nav Links */}
         <div className="hidden md:flex gap-8 text-sm font-medium">
           {navItems.map(({ name, path }) => (
-            <Link
+            <a
               key={name}
-              to={path}
+              href={`#${path}`}
               className={`transition-colors ${
-                isActive(path)
-                  ? "text-blue font-semibold"
+                activeId === path
+                  ? "text-blue-600 font-semibold"
                   : "text-gray-700 hover:text-blue-500"
               }`}
             >
               {name}
-            </Link>
+            </a>
           ))}
         </div>
 
+        {/* Auth Buttons */}
         <div className="md:flex gap-2">
           <Link
-            to="/get-started"
-            className="bg-blue-500 text-white font-semibold px-6 py-2 rounded-full hover:bg-blue-500 transition"
+            to="/login"
+            className="bg-blue-500 text-white font-semibold px-6 py-2 rounded-full hover:bg-blue-600 transition"
           >
             Login
           </Link>
           <Link
-            to="/get-started"
-            className="bg-blue-500 text-white font-semibold px-6 py-2 rounded-full hover:bg-blue-500 transition"
+            to="/register"
+            className="bg-blue-500 text-white font-semibold px-6 py-2 rounded-full hover:bg-blue-600 transition"
           >
             Register
           </Link>

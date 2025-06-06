@@ -37,7 +37,7 @@ const steps = [
 
 export default function HowItWorks() {
   return (
-    <div className="w-[90%] mx-auto bg-gradient-to-b from-gray-50 to-white py-16 px-4 sm:px-8 text-center">
+    <div id="howitworks" className="w-[90%] mx-auto bg-gradient-to-b from-gray-50 to-white py-16 px-4 sm:px-8 text-center">
       <h2 className="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4">
         How <span className="text-blue-600">It Works</span>
       </h2>

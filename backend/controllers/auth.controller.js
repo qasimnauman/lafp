@@ -3,6 +3,8 @@ import ApiError from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/AsyncHandler.js"
 import { uploadToS3 } from "../utils/s3_upload.js";
+import { sendEmail } from "../utils/sendemail.js";
+import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -27,6 +29,48 @@ const generateAccessAndRefreshToken = async (userId) => {
         throw new ApiError(500, "Something went wrong while generating refresh and access token")
     }
 }
+
+const generatedOtps = new Set();
+
+const generateOTP = () => {
+    let otp;
+    do {
+        otp = Math.floor(100000 + Math.random() * 900000);
+    } while (generatedOtps.has(otp));
+    generatedOtps.add(otp);
+    // Optionally, clean up old OTPs after some time if needed
+    setTimeout(() => {
+        generatedOtps.delete(otp);
+    }, 5 * 60 * 1000);
+    return otp;
+};
+
+const generateOTPToken = async (userId) => {
+    try {
+        const user = await User.findById(userId);
+        if (!user) throw new ApiError(404, "User not found");
+
+        const otp = generateOTP();
+
+        if (typeof user.generateOTPToken !== 'function') {
+            throw new Error("generateOTPToken method is not defined on user instance");
+        }
+
+        const otpToken = user.generateOTPToken(otp);
+        user.otpToken = otpToken;
+        user.otpExpires = Date.now() + 5 * 60 * 1000;
+
+        await user.save({ validateBeforeSave: false });
+
+        console.log("Generated OTP:", otp);
+        console.log("Generated OTP Token:", otpToken);
+        return { otp, otpToken };
+    } catch (error) {
+        console.error("OTP generation error:", error);
+        throw new ApiError(500, "Something went wrong while generating OTP");
+    }
+};
+
 
 const registerUser = asyncHandler(
     async (req, res) => {
@@ -56,7 +100,7 @@ const registerUser = asyncHandler(
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            throw new Apierror(400, "Invalid Email");
+            throw new ApiError(400, "Invalid Email");
         }
 
         const existedUser = await User.findOne({
@@ -98,93 +142,229 @@ const registerUser = asyncHandler(
             studentId,
             contact,
             avatar: avatarUrl,
-            role: "User"
+            role: "user"
         });
         console.log(newUser);
 
         const createdUser = await User.findById(newUser._id).select("-password -refreshToken");
 
+
         if (!createdUser) {
             throw new ApiError(500, "Failed to create user");
         }
 
-        return res.status(201).json(
-            new ApiResponse(
-                201,
-                createdUser,
-                "User created successfully"
-            )
-        );
+        const { otp, otpToken } = await generateOTPToken(createdUser._id);
+        console.log("Generated OTP for user:", otp);
+        console.log("Generated OTP Token for user:", otpToken);
 
-    }
-);
-
-const userLogin = asyncHandler(
-    async (req, res) => {
-        const {
-            username,
-            email,
-            password
-        } = req.body
-
-        if (
-            [username, email, password].some((feild) => feild?.trim() === "")
-        ) {
-            throw new ApiError(
-                400,
-                "All Feild are required"
-            )
+        try {
+            await sendEmail(
+                createdUser.email,
+                "Your OTP Code",
+                `Your OTP code is: ${otp}`,
+                `
+            <div style="font-family: Arial, sans-serif; font-size: 16px;">
+                <p>Hello ${createdUser.fullName || createdUser.username || 'User'},</p>
+                <h2 style="color: #2b6cb0; font-size: 24px;">${otp}</h2>
+                <p>This OTP is valid for 5 minutes. Do not share it with anyone.</p>
+                <p style="margin-top: 20px;">– Air University Lost and Found</p>
+            </div>
+            `
+            );
+        } catch (error) {
+            console.error("Failed to send OTP email:", error);
+            throw new ApiError(500, "Failed to send OTP email");
         }
-
-        const user = await User.findOne({
-            $or: [{ username }, { email }]
-        });
-
-        if (!user) {
-            throw new ApiError(
-                404,
-                "User not registered"
-            )
-        }
-
-        const passwordCheck = await user.isPasswordCorrect(password);
-
-        if (!passwordCheck) {
-            throw new ApiError(
-                401,
-                "Incorrect Password"
-            )
-        }
-
-        const { generatedAccessToken, generatedRefreshToken } = await generateAccessAndRefreshToken(user._id);
-
-        console.log("Access Token: ", generatedAccessToken);
-        console.log("Refresh Token: ", generatedRefreshToken);
-
-        const loggedInUser = await User.findById(user._id).select(
-            "-password -refreshToken"
-        )
 
         const options = {
             httpOnly: true,
-            secure: true
+            // maxAge: 24 * 60 * 60 * 1000,
+            secure: true,
+        };
+
+        return res
+            .status(201)
+            .cookie("otpToken", otpToken, options)
+            .json(
+                new ApiResponse(
+                    201,
+                    createdUser,
+                    "User created successfully"
+                )
+            );
+    }
+);
+
+const userLogin = asyncHandler(async (req, res) => {
+    const { username, email, password } = req.body;
+
+    if ([username, email, password].some((field) => field?.trim() === "")) {
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const user = await User.findOne({
+        $or: [{ username }, { email }]
+    });
+
+    if (!user) {
+        throw new ApiError(404, "User not registered");
+    }
+
+    const passwordCheck = await user.isPasswordCorrect(password);
+    if (!passwordCheck) {
+        throw new ApiError(401, "Incorrect password");
+    }
+
+    const { generatedAccessToken, generatedRefreshToken } = await generateAccessAndRefreshToken(user._id);
+    console.log("Access Token:", generatedAccessToken);
+    console.log("Refresh Token:", generatedRefreshToken);
+
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+    if (!loggedInUser) {
+        throw new ApiError(500, "Failed to retrieve logged-in user");
+    }
+
+    if (!loggedInUser.isVerified) {
+        const { otp, otpToken } = await generateOTPToken(loggedInUser._id);
+        console.log("Generated OTP for user:", otp);
+        console.log("Generated OTP Token for user:", otpToken);
+
+        // Send OTP via email
+        try {
+            await sendEmail(
+                user.email,
+                "Your OTP Code",
+                `Your OTP code is: ${otp}`,
+                `
+            <div style="font-family: Arial, sans-serif; font-size: 16px;">
+                <p>Hello ${loggedInUser.fullName || loggedInUser.username || 'User'},</p>
+                <h2 style="color: #2b6cb0; font-size: 24px;">${otp}</h2>
+                <p>This OTP is valid for 5 minutes. Do not share it with anyone.</p>
+                <p style="margin-top: 20px;">– Air University Lost and Found</p>
+            </div>
+            `
+            );
+        } catch (error) {
+            console.error("Failed to send OTP email:", error);
+            throw new ApiError(500, "Failed to send OTP email");
         }
 
-        return res.status(200)
-            .cookie("accessToken", generatedAccessToken, options)
-            .cookie("refreshToken", generatedRefreshToken, options)
+        const options = {
+            httpOnly: true,
+            // maxAge: 24 * 60 * 60 * 1000,
+            secure: true,
+        };
+
+        return res.
+            status(200)
+            .cookie("otpToken", otpToken, options)
             .json(
                 new ApiResponse(
                     200,
-                    {
-                        user: loggedInUser, generatedAccessToken,
-                        generatedRefreshToken
-                    },
-                    "User logged in"
+                    { user: loggedInUser, otpToken: otpToken },
+                    "User logged in but not verified. OTP sent to email."
                 )
-            )
+            );
     }
-);
+
+
+
+    const options = {
+        httpOnly: true,
+        // maxAge: 24 * 60 * 60 * 1000,
+        secure: true,
+    };
+
+    return res
+        .status(200)
+        .cookie("accessToken", generatedAccessToken, options)
+        .cookie("refreshToken", generatedRefreshToken, options)
+        .json(
+            new ApiResponse(
+                200,
+                { user: loggedInUser, accessToken: generatedAccessToken, refreshToken: generatedRefreshToken },
+                "User logged in"
+            )
+        );
+});
+
+const verifyOTP = asyncHandler(async (req, res) => {
+    const { otp } = req.body;
+
+    // console.log('Received OTP:', otp);
+
+    if (!otp) {
+        throw new ApiError(400, "OTP is required");
+    }
+
+    if (!req.user) {
+        throw new ApiError(401, "User not authenticated");
+    }
+
+    // console.log('User data in verifyOTP:', req.user);
+
+    if (!req.cookies?.otpToken) {
+        console.error('No OTP token for user:', req.user._id);
+        throw new ApiError(400, "No OTP token found for user. Please request a new OTP.");
+    }
+
+    try {
+        const decoded = jwt.verify(req.cookies?.otpToken, process.env.OTP_TOKEN_SECRET);
+        // console.log('Decoded OTP token:', decoded);
+        // console.log('Decoded OTP:', decoded.otp);
+
+        // console.log('Type of decoded.otp:', typeof decoded.otp);
+        // console.log('Type of received otp:', typeof otp);
+
+
+        if (decoded.otp !== Number(otp)) {
+            throw new ApiError(401, "Invalid OTP");
+        }
+
+        if (Date.now() > req.user.otpExpires) {
+            throw new ApiError(401, "OTP has expired");
+        }
+
+        // OTP is valid, clear the OTP token and expiration
+        const updatedUser = await User.findByIdAndUpdate(
+            req.user._id,
+            {
+                $set: {
+                    isVerified: true
+                }
+            },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            throw new ApiError(500, "Failed to update user after OTP verification");
+        }
+
+        const newUpdatedUser = await User.findById(req.user._id).select("-password");
+
+        const { generatedAccessToken, generatedRefreshToken } = await generateAccessAndRefreshToken(updatedUser._id);
+        console.log("Access Token:", generatedAccessToken);
+        console.log("Refresh Token:", generatedRefreshToken);
+
+        const options = {
+            httpOnly: true,
+            // maxAge: 24 * 60 * 60 * 1000,
+            secure: true,
+        };
+
+        return res
+            .status(200)
+            .cookie("accessToken", generatedAccessToken, options)
+            .cookie("refreshToken", generatedRefreshToken, options)
+            .json(
+                new ApiResponse(200, newUpdatedUser, "OTP verified successfully")
+            );
+    } catch (error) {
+        console.error('OTP verification error:', error.message);
+        throw new ApiError(401, error.message || 'Invalid or expired OTP');
+    }
+});
 
 const logoutUser = asyncHandler(
     async (req, res) => {
@@ -220,6 +400,7 @@ const logoutUser = asyncHandler(
         return res.status(200)
             .cookie("accessToken", "", Options)
             .cookie("refreshToken", "", Options)
+            .cookie("otpToken", "", Options)
             .json(
                 new ApiResponse(
                     200, {}, "User Logged Out"
@@ -231,5 +412,7 @@ const logoutUser = asyncHandler(
 export {
     userLogin,
     registerUser,
-    logoutUser
+    logoutUser,
+    generateOTPToken,
+    verifyOTP
 };

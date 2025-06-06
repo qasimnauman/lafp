@@ -11,7 +11,7 @@ const doc = {
 };
 
 const outputFile = './swagger-output.json';
-const endpointsFiles = ['./routes/user.routes.js']; // or ['./routes/*.js']
+const endpointsFiles = ['./routes/*.js']; // or ['./routes/*.js']
 
 const generateSwagger = async () => {
   try {
