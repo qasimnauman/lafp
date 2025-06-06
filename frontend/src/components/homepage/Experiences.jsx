@@ -42,7 +42,7 @@ const testimonials = [
 
 const StudentExperiences = () => {
   return (
-    <div className="py-16 px-4 bg-white text-center">
+    <div id='experiences' className="py-16 px-4 bg-white text-center">
       <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-400">
         Student Experiences at Air University
       </h2>

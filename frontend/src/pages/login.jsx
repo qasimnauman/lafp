@@ -34,7 +34,7 @@ function Login() {
       return;
     }
 
-    setShowOtp(true);
+    setShowOtp(false);
     setIsLoading(false);
   };
 
@@ -135,7 +135,7 @@ function Login() {
             </div>
           </>
         ) : (
-          <OtpVerification email={form.email} />
+          <OtpVerification />
         )}
       </div>
     </div>

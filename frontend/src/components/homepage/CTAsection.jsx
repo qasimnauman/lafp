@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"; // import Link
 
 const CTASection = () => {
   return (
-    <section className="bg-blue-50 py-16 px-4 text-center">
+    <div id="getstarted" className="bg-blue-50 py-16 px-4 text-center">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-bold text-blue-700">
           Ready to find what you've lost at AU?
@@ -28,7 +28,7 @@ const CTASection = () => {
           </Link>
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 

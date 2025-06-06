@@ -55,6 +55,10 @@ const userSchema = new Schema({
     role: {
         type: String,
         required: true
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 
@@ -88,5 +92,16 @@ userSchema.methods.generateRefreshToken = function () {
             expiresIn: process.env.REFRESH_TOKEN_EXPIRY
         })
 }
-
+userSchema.methods.generateOTPToken = function (otp) {
+    return jwt.sign(
+        {
+            _id: this._id,
+            otp: otp,
+        },
+        process.env.OTP_TOKEN_SECRET, // Use the same secret as in verifyOTP
+        {
+            expiresIn: process.env.OTP_TOKEN_EXPIRY || '5m',
+        }
+    );
+};
 export const User = mongoose.model("Users", userSchema);
