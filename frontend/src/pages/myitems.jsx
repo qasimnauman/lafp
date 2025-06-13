@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios"; // Make sure axios is installed
 import { Search, Package } from "lucide-react";
 import ItemCard from "../components/MyItems/ItemCard";
-import { useItemContext } from "../context/ItemContext";
+import { useItemContext } from "../context/ItemsContext";
 
 const MyItemsPage = () => {
   const [activeTab, setActiveTab] = useState("Lost Items");

@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
-import { ItemProvider } from "./context/ItemContext"; // ⬅️ Import this
+import { ItemProvider } from "./context/ItemsContext";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(

@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useState } from 'react';
-import lostAndFoundItems from '../data/lostfoundData';
+import lostAndFoundItems from '../data/lostFoundData';
 import ItemImage from '../components/itemDetail/ItemImage';
 import ItemInfo from '../components/itemDetail/ItemInfo';
 import DescriptionCard from '../components/itemDetail/DescriptionCard';

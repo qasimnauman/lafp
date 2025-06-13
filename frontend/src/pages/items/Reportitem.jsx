@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { MapPin, Clock } from "lucide-react";
 import FormField from "../../components/reportitem/formfield";
 import ImageUpload from "../../components/reportitem/imageupload";
-import CustomSearchDropdown from "../../components/common/CustomSearchDropDown";
+import CustomSearchDropdown from "../../components/common/CustomSearchDropDown.jsx";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 
