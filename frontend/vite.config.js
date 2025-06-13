@@ -12,7 +12,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/v1': {
-        target: 'http://api.lspf.qasimnauman.tech', // Backend server
+        target: 'https://api.lspf.qasimnauman.tech', // Backend server
         changeOrigin: true, // Ensure the request appears to come from the frontend server
       },
     },
