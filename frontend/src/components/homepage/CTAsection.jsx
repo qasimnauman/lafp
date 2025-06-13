@@ -20,12 +20,12 @@ const CTASection = () => {
           >
             Get Started
           </Link>
-          <Link
-            to="/items/Lost"
+          {/* <Link
+            to=""
             className="border border-blue-600 text-blue-600 px-6 py-3 rounded-md text-lg font-medium hover:bg-blue-100 transition"
           >
             Browse Lost Items
-          </Link>
+          </Link> */}
         </div>
       </div>
     </div>
