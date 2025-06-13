@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
-import swaggerDocument from './swagger-output.json' assert { type: 'json' };
+import swaggerDocument from './swagger-output.json' with { type: 'json' };
 
 import authRoutes from './routes/auth.routes.js';
 import categoryRoutes from './routes/category.route.js';
