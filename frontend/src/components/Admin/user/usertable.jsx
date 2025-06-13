@@ -1,37 +1,54 @@
-import React, { useState } from "react";
-
-const initialUsers = [
-  {
-    id: 1,
-    name: "Ahmed Raza",
-    email: "ahmed.raza@example.com",
-    joinDate: "March 10, 2023",
-  },
-  {
-    id: 2,
-    name: "Sara Khan",
-    email: "sara.khan@example.com",
-    joinDate: "April 5, 2023",
-  },
-  {
-    id: 3,
-    name: "Zain Ali",
-    email: "zain.ali@example.com",
-    joinDate: "May 12, 2023",
-  },
-];
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const UsersTable = () => {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleDelete = (id) => {
-    const confirmDelete = window.confirm("Are you sure you want to delete this user?");
-    if (confirmDelete) {
-      setUsers((prev) => prev.filter((user) => user.id !== id));
-      // Optional API call:
-      // fetch(`/api/users/${id}`, { method: "DELETE" });
+  const fetchUsers = async () => {
+    try {
+      const res = await axios.get("/api/v1/auth/getallusers");
+      if (res.data.success) {
+        const transformedUsers = res.data.data.map((user, index) => ({
+          id: user._id,
+          name: user.fullName || user.username,
+          email: user.email,
+          joinDate: new Date(user.createdAt).toLocaleDateString(),
+        }));
+
+        console.log(transformedUsers);
+        setUsers(transformedUsers);
+      }
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const handleDelete = async (id) => {
+    console.log(id);
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this user?"
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await axios.delete(`/api/v1/auth/deleteuser/${id}`);
+      setUsers((prev) => prev.filter((user) => user.id !== id));
+      alert("✅ User deleted successfully.");
+    } catch (error) {
+      console.error(error);
+      alert(
+        "❌ Failed to delete user: " +
+          (error.response?.data?.message || error.message)
+      );
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   return (
     <div className="p-6">
@@ -47,10 +64,16 @@ const UsersTable = () => {
             </tr>
           </thead>
           <tbody>
-            {users.length > 0 ? (
-              users.map((user) => (
-                <tr key={user.id} className="border-b hover:bg-gray-50">
-                  <td className="px-6 py-4 font-bold">{user.id}</td>
+            {loading ? (
+              <tr>
+                <td colSpan="5" className="text-center text-gray-500 py-6">
+                  Loading users...
+                </td>
+              </tr>
+            ) : users.length > 0 ? (
+              users.map((user, index) => (
+                <tr key={index} className="border-b hover:bg-gray-50">
+                  <td className="px-6 py-4 font-bold">{index + 1}</td>
                   <td className="px-6 py-4 font-semibold">{user.name}</td>
                   <td className="px-6 py-4">{user.email}</td>
                   <td className="px-6 py-4">{user.joinDate}</td>

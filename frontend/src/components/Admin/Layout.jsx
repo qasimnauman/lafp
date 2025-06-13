@@ -1,8 +1,9 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
-import Sidebar from './sidebar';
+import React from "react";
+import { Outlet } from "react-router-dom";
+import Sidebar from "./SidebarAdmin";
+import SidebarUser from "./SidebarUser";
 
-const Layout = () => {
+const AdminLayout = () => {
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
@@ -13,4 +14,15 @@ const Layout = () => {
   );
 };
 
-export default Layout;
+const UserLayout = () => {
+  return (
+    <div className="flex h-screen bg-gray-100">
+      <SidebarUser />
+      <main className="flex-1 -ml-6 bg-white rounded-l-3xl p-6 shadow-xl overflow-auto">
+        <Outlet />
+      </main>
+    </div>
+  );
+};
+
+export { AdminLayout, UserLayout };
