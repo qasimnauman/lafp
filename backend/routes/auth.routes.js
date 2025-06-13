@@ -4,7 +4,12 @@ import {
     userLogin,
     logoutUser,
     generateOTPToken,
-    verifyOTP
+    verifyOTP,
+    updateUser,
+    changeUserCurrentPassword,
+    getCurrectUser,
+    getAllUsers,
+    deleteUser
 } from '../controllers/auth.controller.js';
 import { sendEmail } from '../utils/sendemail.js';
 import { upload } from '../middlewares/multer.middleware.js';
@@ -35,5 +40,10 @@ router.post("/emailtest", async (req, res, next) => {
 
 router.route("/testotp").post(generateOTPToken)
 router.route("/verifyotp").post(verifyOtpToken, verifyOTP)
+router.route("/updateuser").put(verifyJWT, upload.single('avatar'), updateUser);
+router.route("/changepassword").put(verifyJWT, changeUserCurrentPassword);
+router.route("/currentuser").get(verifyJWT, getCurrectUser);
+router.route("/getallusers").get(verifyJWT, getAllUsers)
+router.route("/deleteuser/:id").delete(verifyJWT, deleteUser)
 
 export default router;

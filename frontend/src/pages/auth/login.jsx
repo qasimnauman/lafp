@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
-import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import OtpVerification from './OtpVerification';
+import React, { useState } from "react";
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import OtpVerification from "./OtpVerification";
+import axios from "axios";
+import { Link } from "react-router-dom";
+import Cookies from "js-cookie";
 
 function Login() {
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
   const [showOtp, setShowOtp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -12,30 +15,65 @@ function Login() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-    setError('');
+    setError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate loading delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    if (!form.email.endsWith('@students.au.edu.pk')) {
-      setError('Please use your @students.au.edu.pk email.');
+    if (!form.email.endsWith("@students.au.edu.pk")) {
+      setError("Please use your @students.au.edu.pk email.");
       setIsLoading(false);
       return;
     }
 
     if (form.password.length < 6) {
-      setError('Password should be at least 6 characters.');
+      setError("Password should be at least 6 characters.");
       setIsLoading(false);
       return;
     }
 
-    setShowOtp(false);
-    setIsLoading(false);
+    try {
+      const res = await axios.post("/api/v1/auth/login", form, {
+        withCredentials: true,
+      });
+
+      if (res.status === 200) {
+        const { user } = res.data.data;
+        const { accessToken, refreshToken } = res.data;
+
+        Cookies.set("accessToken", accessToken, {
+          secure: true,
+          sameSite: "Strict",
+        });
+
+        Cookies.set("refreshToken", refreshToken, {
+          secure: true,
+          sameSite: "Strict",
+        });
+
+        localStorage.setItem("user", JSON.stringify(user));
+        console.log("User data:", user);
+
+        if (user.isVerified) {
+          if (user.role === "admin") {
+            window.location.href = "/admin";
+          } else if (user.role === "user") {
+            window.location.href = "/user";
+          }
+        } else {
+          setShowOtp(true);
+        }
+      }
+    } catch (err) {
+      console.error("Login error:", err.response?.data || err.message);
+      setError(err.response?.data?.message || "Login failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -60,7 +98,10 @@ function Login() {
                   Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Mail
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                   <input
                     type="email"
                     name="email"
@@ -79,7 +120,10 @@ function Login() {
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <Lock
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                    size={18}
+                  />
                   <input
                     type={showPassword ? "text" : "password"}
                     name="password"
@@ -102,7 +146,10 @@ function Login() {
               {/* Error Message */}
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
-                  <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={16} />
+                  <AlertCircle
+                    className="text-red-500 flex-shrink-0 mt-0.5"
+                    size={16}
+                  />
                   <p className="text-red-700 text-sm">{error}</p>
                 </div>
               )}
@@ -119,7 +166,7 @@ function Login() {
                     Signing In...
                   </div>
                 ) : (
-                  'Sign In'
+                  "Sign In"
                 )}
               </button>
             </form>
@@ -127,10 +174,13 @@ function Login() {
             {/* Footer */}
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Having trouble signing in?{' '}
-                <button className="text-blue-600 hover:text-blue-700 font-medium">
-                  Contact Support
-                </button>
+                Already Have an Account?{" "}
+                <Link
+                  to="/register"
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Register
+                </Link>
               </p>
             </div>
           </>

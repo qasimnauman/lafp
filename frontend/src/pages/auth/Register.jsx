@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Mail, Lock, User, AlertCircle, Eye, EyeOff } from "lucide-react";
-import CustomSearchDropdown from "../components/common/CustomSearchDropDown";
+import CustomSearchDropdown from "../../components/common/CustomSearchDropDown";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import Cookies from "js-cookie";
@@ -15,7 +15,7 @@ const Register = () => {
     "6th",
     "7th",
     "8th",
-  ];
+  ].map((s) => ({ label: s, value: s }));
 
   const departmentOptions = [
     "Computer Science",
@@ -29,7 +29,7 @@ const Register = () => {
     "Economics",
     "Psychology",
     "Biology",
-  ];
+  ].map((dept) => ({ label: dept, value: dept }));
 
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);

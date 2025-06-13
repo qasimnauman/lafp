@@ -7,13 +7,13 @@ const commentSchema = new Schema({
     },
     postedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Users",
+        ref: "User",
         required: true
     },
     item: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Items"
     }
-});
+}, { timestamps: true });
 
 export const Comments = mongoose.model("Comments", commentSchema);

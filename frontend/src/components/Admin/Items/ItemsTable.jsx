@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { MoreVertical } from "lucide-react";
+import axios from "axios";
 
 const StatusBadge = ({ status }) => {
   const isLost = status === "lost";
@@ -14,7 +15,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const ActionsDropdown = ({ onView, onDelete }) => {
+const ActionsDropdown = ({ onView, onDelete, deleting }) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -41,9 +42,12 @@ const ActionsDropdown = ({ onView, onDelete }) => {
               setOpen(false);
               onDelete();
             }}
-            className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+            disabled={deleting}
+            className={`w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 ${
+              deleting ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
-            Delete
+            {deleting ? "Deleting..." : "Delete"}
           </button>
         </div>
       )}
@@ -52,21 +56,21 @@ const ActionsDropdown = ({ onView, onDelete }) => {
 };
 
 const ItemsTable = ({ items, categoryFilter }) => {
-  const filteredItems = items.filter((item) =>
-    categoryFilter === "" ? true : item.category.toLowerCase() === categoryFilter
+  const [localItems, setLocalItems] = useState(items); // fixed state naming
+
+  const filteredItems = localItems.filter((item) =>
+    categoryFilter === ""
+      ? true
+      : item.category?.name?.toLowerCase() === categoryFilter
   );
 
   const handleView = (item) => {
-    alert(`Viewing details for ${item.name}`);
-  };
-
-  const handleDelete = (item) => {
-    alert(`Deleting item: ${item.name}`);
+    alert(`Viewing details for ${item.itemName}`);
   };
 
   return (
     <div className="p-6">
-      <div className="overflow-x-auto bg-white shadow rounded-lg border border-blue-100">
+      <div className="bg-white shadow rounded-lg border border-blue-100">
         <table className="w-full text-left text-sm text-gray-700">
           <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
             <tr className="bg-blue-50 text-blue-800 font-semibold">
@@ -77,30 +81,31 @@ const ItemsTable = ({ items, categoryFilter }) => {
               <th className="px-6 py-4">Date</th>
               <th className="px-6 py-4">Reporter</th>
               <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-center">Actions</th>
+              {/* <th className="px-6 py-4 text-center">Actions</th> */}
             </tr>
           </thead>
           <tbody>
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b hover:bg-gray-50"
-                >
-                  <td className="px-6 py-4 font-bold">{item.id}</td>
-                  <td className="px-6 py-4 font-semibold">{item.name}</td>
-                  <td className="px-6 py-4 capitalize">{item.category}</td>
-                  <td className="px-6 py-4">{item.location}</td>
-                  <td className="px-6 py-4">{item.date}</td>
-                  <td className="px-6 py-4">{item.reporter}</td>
+                <tr key={item._id} className="border-b hover:bg-gray-50">
+                  <td className="px-6 py-4 font-bold">{item._id?.slice(-5)}</td>
+                  <td className="px-6 py-4 font-semibold">
+                    {item.itemName || "Unnamed"}
+                  </td>
+                  <td className="px-6 py-4 capitalize">
+                    {item.category?.name || "N/A"}
+                  </td>
+                  <td className="px-6 py-4">{item.location || "N/A"}</td>
+                  <td className="px-6 py-4">
+                    {item.date
+                      ? new Date(item.date).toLocaleDateString()
+                      : "N/A"}
+                  </td>
+                  <td className="px-6 py-4">
+                    {item.reportedBy?.fullName || "Unknown"}
+                  </td>
                   <td className="px-6 py-4">
                     <StatusBadge status={item.status} />
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <ActionsDropdown
-                      onView={() => handleView(item)}
-                      onDelete={() => handleDelete(item)}
-                    />
                   </td>
                 </tr>
               ))

@@ -3,7 +3,7 @@ import { Mail, CheckCircle, AlertCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 const OtpVerification = () => {
   const { login } = useAuth();
@@ -40,6 +40,7 @@ const OtpVerification = () => {
           secure: true,
           sameSite: "Strict",
         });
+        Cookies.remove("otpToken");
 
         console.log("User data:", res.data.data);
 

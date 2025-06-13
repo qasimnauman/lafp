@@ -1,35 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+// import { toast, Toaster } from "react-hot-toast";
 
-const initialClaims = [
-  {
-    id: 101,
-    item: "Apple AirPods Pro",
-    claimant: "Hasan Ali",
-    email: "hasan.ali@example.com",
-    phone: "+92 300 1234567",
-    date: "May 18, 2023",
-    status: "Pending",
-  },
-  {
-    id: 102,
-    item: "University ID Card",
-    claimant: "Ali Ahmed",
-    email: "ali.ahmed@example.com",
-    phone: "+92 301 7654321",
-    date: "May 22, 2023",
-    status: "Approved",
-  },
-  {
-    id: 103,
-    item: "MacBook Pro 16-inch",
-    claimant: "Ahmad Khan",
-    email: "ahmad.khan@example.com",
-    phone: "+92 302 9876543",
-    date: "May 23, 2023",
-    status: "Rejected",
-  },
-];
-
+// Status badge renderer
 const getStatusBadge = (status) => {
   switch (status) {
     case "Pending":
@@ -56,31 +29,75 @@ const getStatusBadge = (status) => {
 };
 
 const ClaimRequestsTable = () => {
-  const [claims, setClaims] = useState(initialClaims);
+  const [claims, setClaims] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
 
-  const handleAction = (id, newStatus) => {
-    setClaims((prevClaims) =>
-      prevClaims.map((claim) =>
-        claim.id === id ? { ...claim, status: newStatus } : claim
-      )
-    );
+  // Fetch claims from backend
+  useEffect(() => {
+    const fetchClaims = async () => {
+      try {
+        const res = await axios.get("/api/v1/items/getallclaimeditems");
+        setClaims(res.data.message);
+      } catch (err) {
+        console.error("Failed to load claims:", err);
+        // toast.error("Failed to load claim requests");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // TODO: Call backend API here
-    // fetch(`/api/claims/${id}`, {
-    //   method: 'PATCH',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ status: newStatus }),
-    // });
+    fetchClaims();
+  }, []);
+
+  // Approve/Reject claim handler
+  const handleApproveClaim = async (itemId, userId) => {
+    try {
+      setActionLoadingId(`${itemId}_${userId}`);
+      await axios.post("/api/v1/items/approveclaim", { itemId, userId });
+
+      setClaims((prevClaims) =>
+        prevClaims.map((claim) =>
+          claim._id === itemId ? { ...claim, claimStatus: "Approved" } : claim
+        )
+      );
+    } catch (err) {
+      console.error("Error approving claim:", err);
+      alert("Failed to approve claim.");
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
+  const handleRejectClaim = async (itemId, userId) => {
+    try {
+      setActionLoadingId(`${itemId}_${userId}`);
+      await axios.post("/api/v1/items/approveClaim", { itemId, userId });
+
+      setClaims((prevClaims) =>
+        prevClaims.map((claim) =>
+          claim._id === itemId ? { ...claim, claimStatus: "Rejected" } : claim
+        )
+      );
+    } catch (err) {
+      console.error("Error rejecting claim:", err);
+      alert("Failed to reject claim.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-6 text-center">Loading claims...</div>;
+  }
+
   return (
-    <div className="p-6">
-     
+    <div className="p-6 relative">
+      {/* <Toaster position="top-right" reverseOrder={false} /> */}
       <div className="overflow-x-auto bg-white shadow rounded-lg">
         <table className="w-full text-left text-sm text-gray-700">
           <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
             <tr className="bg-blue-50 text-blue-800 font-semibold">
-              <th className="px-6 py-4">Claim ID</th>
               <th className="px-6 py-4">Item</th>
               <th className="px-6 py-4">Claimant</th>
               <th className="px-6 py-4">Contact</th>
@@ -90,39 +107,77 @@ const ClaimRequestsTable = () => {
             </tr>
           </thead>
           <tbody>
-            {claims.map((claim) => (
-              <tr key={claim.id} className="border-b hover:bg-gray-50">
-                <td className="px-6 py-4 font-bold">{claim.id}</td>
-                <td className="px-6 py-4 font-semibold">{claim.item}</td>
-                <td className="px-6 py-4">{claim.claimant}</td>
-                <td className="px-6 py-4">
-                  <div>{claim.email}</div>
-                  <div className="text-gray-500 text-sm">{claim.phone}</div>
-                </td>
-                <td className="px-6 py-4">{claim.date}</td>
-                <td className="px-6 py-4">{getStatusBadge(claim.status)}</td>
-                <td className="px-6 py-4 space-x-2">
-                  {claim.status === "Pending" ? (
-                    <>
-                      <button
-                        onClick={() => handleAction(claim.id, "Approved")}
-                        className="bg-white text-green-600 border border-green-600 px-3 py-1 rounded hover:bg-green-50"
-                      >
-                        Approve
+            {claims.map((claim) => {
+              // const loadingKey = `${claim._id}_${claim.claimant?._id}`;
+              return (
+                <tr key={claim._id} className="border-b hover:bg-gray-50">
+                  <td className="px-6 py-4 font-semibold">{claim.itemName}</td>
+                  <td className="px-6 py-4">{claim.claimant?.fullName}</td>
+                  <td className="px-6 py-4">
+                    <div>{claim.claimant?.email}</div>
+                    <div className="text-gray-500 text-sm">
+                      {claim.claimant?.contact}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    {new Date(claim.claimedAt).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4">
+                    {getStatusBadge(claim.claimStatus)}
+                  </td>
+                  <td className="px-6 py-4 space-x-2">
+                    {claim.claimStatus === "Pending" ? (
+                      <>
+                        <button
+                          onClick={() =>
+                            handleApproveClaim(claim._id, claim.claimant._id)
+                          }
+                          disabled={
+                            actionLoadingId ===
+                            `${claim._id}_${claim.claimant._id}`
+                          }
+                          className={`px-3 py-1 rounded border text-green-600 border-green-600 ${
+                            actionLoadingId ===
+                            `${claim._id}_${claim.claimant._id}`
+                              ? "opacity-50 cursor-not-allowed"
+                              : "hover:bg-green-50"
+                          }`}
+                        >
+                          {actionLoadingId ===
+                          `${claim._id}_${claim.claimant._id}`
+                            ? "Processing..."
+                            : "Approve"}
+                        </button>
+                        <button
+                          onClick={() =>
+                            handleRejectClaim(claim._id, claim.claimant._id)
+                          }
+                          disabled={
+                            actionLoadingId ===
+                            `${claim._id}_${claim.claimant._id}`
+                          }
+                          className={`px-3 py-1 rounded border text-red-600 border-red-600 ${
+                            actionLoadingId ===
+                            `${claim._id}_${claim.claimant._id}`
+                              ? "opacity-50 cursor-not-allowed"
+                              : "hover:bg-red-50"
+                          }`}
+                        >
+                          {actionLoadingId ===
+                          `${claim._id}_${claim.claimant._id}`
+                            ? "Processing..."
+                            : "Reject"}
+                        </button>
+                      </>
+                    ) : (
+                      <button className="text-blue-600 hover:underline">
+                        View
                       </button>
-                      <button
-                        onClick={() => handleAction(claim.id, "Rejected")}
-                        className="bg-white text-red-600 border border-red-600 px-3 py-1 rounded hover:bg-red-50"
-                      >
-                        Reject
-                      </button>
-                    </>
-                  ) : (
-                    <button className="text-blue-600 hover:underline">View</button>
-                  )}
-                </td>
-              </tr>
-            ))}
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

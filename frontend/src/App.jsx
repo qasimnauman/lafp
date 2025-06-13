@@ -9,20 +9,23 @@ import {
 import Layout from "./Layout";
 
 // Layouts
-import AdminLayout from "./components/Admin/Layout";
+import { AdminLayout, UserLayout } from "./components/Admin/Layout";
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 
 // Public Pages
+import UserDashboard from "./pages/users/UserDashboard";
 import Homepage from "./pages/homepage";
-import ReportItemPage from "./pages/Reportitem";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import ReportItemPage from "./pages/items/Reportitem";
+import Login from "./pages/auth/login";
+import Register from "./pages/auth/Register";
 import AccountSettings from "./pages/profile";
+import AllItems from "./pages/users/AllItems";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import LostAndFoundPageWrapper from "./pages/LostAndFoundPageWrapper";
 import MyItemsPage from "./pages/myitems";
-import OtpVerification from "./pages/OtpVerification";
+import OtpVerification from "./pages/auth/OtpVerification";
+import ClaimsPage from "./pages/users/Claims";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/dashboard";
@@ -43,31 +46,56 @@ const router = createBrowserRouter(
       <Route path="/register" element={<Register />} />
       <Route path="/verify-otp" element={<OtpVerification />} />
 
-      {/* User-only routes */}
-      <Route
-        path="/report-item"
-        element={
-          <ProtectedRoute allowedRoles={["user"]}>
-            <ReportItemPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/my-items"
-        element={
-          <ProtectedRoute allowedRoles={["user"]}>
-            <MyItemsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/account-settings"
-        element={
-          <ProtectedRoute allowedRoles={["user"]}>
-            <AccountSettings />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/user" element={<UserLayout />}>
+        <Route
+          index
+          element={
+            <ProtectedRoute allowedRoles={["user"]}>
+              <UserDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="allitems"
+          element={
+            <ProtectedRoute allowedRoles={["user"]}>
+              <AllItems />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="report-item"
+          element={
+            <ProtectedRoute allowedRoles={["user"]}>
+              <ReportItemPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="myitems"
+          element={
+            <ProtectedRoute allowedRoles={["user"]}>
+              <MyItemsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="claims"
+          element={
+            <ProtectedRoute allowedRoles={["user"]}>
+              <ClaimsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="accountsettings"
+          element={
+            <ProtectedRoute allowedRoles={["user"]}>
+              <AccountSettings />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
 
       {/* Admin-only routes */}
       <Route path="/admin" element={<AdminLayout />}>

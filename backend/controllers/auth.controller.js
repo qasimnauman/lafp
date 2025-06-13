@@ -71,7 +71,6 @@ const generateOTPToken = async (userId) => {
     }
 };
 
-
 const registerUser = asyncHandler(
     async (req, res) => {
         const {
@@ -407,12 +406,152 @@ const logoutUser = asyncHandler(
                 )
             )
     }
-)
+);
+
+const updateUser = asyncHandler(async (req, res) => {
+    const { semester, contact } = req.body;
+
+    if ([semester, contact].some((field) => field?.trim() === "")) {
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    user.semester = semester;
+    user.contact = contact;
+
+    if (req.file) {
+        const avatarUrl = await uploadToS3(
+            req.file.path,
+            req.file.originalname,
+            req.file.mimetype
+        );
+        user.avatar = avatarUrl;
+    }
+
+    await user.save({ validateBeforeSave: false });
+
+    const updatedUser = await User.findById(req.user._id).select(
+        "-password -refreshToken"
+    );
+
+    if (!updatedUser) {
+        throw new ApiError(500, "Failed to fetch updated user");
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, updatedUser, "User updated successfully"));
+});
+
+
+const changeUserCurrentPassword = asyncHandler(async (req, res) => {
+    const { oldpassword, newpassword } = req.body;
+
+    if (!oldpassword || !newpassword) {
+        return res.status(400).json({
+            success: false,
+            message: "Both old and new passwords are required",
+        });
+    }
+
+    if (oldpassword === newpassword) {
+        return res.status(400).json({
+            success: false,
+            message: "Old and new passwords cannot be the same",
+        });
+    }
+
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: "User not found",
+        });
+    }
+
+    const isPasswordCorrect = await user.isPasswordCorrect(oldpassword);
+    if (!isPasswordCorrect) {
+        return res.status(400).json({
+            success: false,
+            message: "Old password is incorrect",
+        });
+    }
+
+    user.password = newpassword;
+
+    await user.save({ validateBeforeSave: false });
+
+    return res.status(200).json({
+        success: true,
+        message: "Password changed successfully",
+    });
+});
+
+
+const getCurrectUser = asyncHandler(
+    async (req, res) => {
+        return res.status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    req.user,
+                    "Current User Fetched Successfully"
+                )
+            )
+    }
+);
+
+const getAllUsers = asyncHandler(
+    async (req, res) => {
+        const users = await User.find().select("-password -refreshToken");
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                users,
+                "All users fetched successfully"
+            )
+        );
+    }
+);
+
+const deleteUser = asyncHandler(
+    async (req, res) => {
+        const userId = req.params.id;
+
+        if (!userId) {
+            throw new ApiError(400, "User ID is required");
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+
+        await User.findByIdAndDelete(userId);
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {},
+                "User deleted successfully"
+            )
+        );
+    }
+);
 
 export {
     userLogin,
     registerUser,
     logoutUser,
     generateOTPToken,
-    verifyOTP
+    verifyOTP,
+    changeUserCurrentPassword,
+    updateUser,
+    getCurrectUser,
+    getAllUsers,
+    deleteUser
 };
